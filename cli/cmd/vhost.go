@@ -80,6 +80,11 @@ func parseVhostOptions() (*libgobuster.Options, *gobustervhost.OptionsVhost, err
 		return nil, nil, fmt.Errorf("invalid value for domain: %w", err)
 	}
 
+	pluginOpts.ExcludeHostnameLength, err = cmdVhost.Flags().GetBool("exclude-hostname-length")
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid value for exclude-hostname-length: %w", err)
+	}
+
 	return globalopts, pluginOpts, nil
 }
 
@@ -95,6 +100,7 @@ func init() {
 	}
 	cmdVhost.Flags().BoolP("append-domain", "", false, "Append main domain from URL to words from wordlist. Otherwise the fully qualified domains need to be specified in the wordlist.")
 	cmdVhost.Flags().String("exclude-length", "", "exclude the following content lengths (completely ignores the status). You can separate multiple lengths by comma and it also supports ranges like 203-206")
+	cmdVhost.Flags().BoolP("exclude-hostname-length", "d", false, "Automatically adjust exclude-length based on dynamic hostname length in responses")
 	cmdVhost.Flags().String("domain", "", "the domain to append when using an IP address as URL. If left empty and you specify a domain based URL the hostname from the URL is extracted")
 
 	cmdVhost.PersistentPreRun = func(cmd *cobra.Command, args []string) {
