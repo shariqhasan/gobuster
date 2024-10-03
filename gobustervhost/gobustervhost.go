@@ -111,11 +111,17 @@ func (v *GobusterVhost) PreRun(ctx context.Context, progress *libgobuster.Progre
 // ProcessWord is the process implementation of gobusterdir
 func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *libgobuster.Progress) error {
 	var subdomain string
+	var wordLength int
 	if v.options.AppendDomain {
 		subdomain = fmt.Sprintf("%s.%s", word, v.domain)
 	} else {
 		// wordlist needs to include full domains
 		subdomain = word
+	}
+	if v.options.ExcludeHostnameLength {
+		wordLength = len(word)
+	} else {
+		wordLength = 0
 	}
 
 	tries := 1
@@ -151,7 +157,7 @@ func (v *GobusterVhost) ProcessWord(ctx context.Context, word string, progress *
 	// subdomain must not match default vhost and non existent vhost
 	// or verbose mode is enabled
 	found := body != nil && !bytes.Equal(body, v.normalBody) && !bytes.Equal(body, v.abnormalBody)
-	if (found && !v.options.ExcludeLengthParsed.Contains(int(size))) || v.globalopts.Verbose {
+	if (found && !v.options.ExcludeLengthParsed.Contains(int(size)-wordLength)) || v.globalopts.Verbose {
 		resultStatus := false
 		if found {
 			resultStatus = true
@@ -251,6 +257,10 @@ func (v *GobusterVhost) GetConfigString() (string, error) {
 		if _, err := fmt.Fprintf(tw, "[+] Exclude Length:\t%s\n", v.options.ExcludeLengthParsed.Stringify()); err != nil {
 			return "", err
 		}
+	}
+
+	if _, err := fmt.Fprintf(tw, "[+] Exclude Hostname Length:\t%t\n", v.options.ExcludeHostnameLength); err != nil {
+		return "", err
 	}
 
 	if err := tw.Flush(); err != nil {
